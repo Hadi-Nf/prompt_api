@@ -43,4 +43,14 @@ def create_prompt(new_prompt: Prompt_Input):
     save_prompts(prompts)
     return{"message" : "added new prompt!"}
 
+@app.put("/prompts/{prompt_id}")
+def update_prompt(prompt_id : int, updated_prompt : Prompt_Input):
+    prompts = load_prompts()
+    for prompt in prompts:
+        if prompt['id'] == prompt_id:
+            prompt['text'] = updated_prompt.text
+            save_prompts(prompts)
+            return{"message" : f"the prompt in prompt ID '{prompt['id']}' has been updated to the following:\n {prompt['text']}"}
+    return{"error" : f"Prompt with an ID of '{prompt_id}' could not be found"}
+
     
