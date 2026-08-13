@@ -52,5 +52,17 @@ def update_prompt(prompt_id : int, updated_prompt : Prompt_Input):
             save_prompts(prompts)
             return{"message" : f"the prompt in prompt ID '{prompt['id']}' has been updated to the following:\n {prompt['text']}"}
     return{"error" : f"Prompt with an ID of '{prompt_id}' could not be found"}
+@app.delete("/prompts/{prompt_id}")
+def delete_prompt(prompt_id : int):
+    prompts = load_prompts()
+    for prompt in prompts:
+        if prompt['id'] == prompt_id:
+            prompts.remove(prompt)
+            for remaining_prompt in prompts:
+                if remaining_prompt['id'] > prompt_id:
+                        remaining_prompt['id'] -= 1
+            save_prompts(prompts)
+            return{"message" : f"Prompt with ID '{prompt['id']}' and text '{prompt['text']}' has been removed"}
+    return{"error" : f"Prompt with an ID of '{prompt_id}' could not be found"}
 
     
