@@ -1,6 +1,12 @@
 from fastapi import FastAPI
+import os
+import requests
+from dotenv import load_dotenv
 import json
 from pydantic import BaseModel
+
+load_dotenv()
+API_KEY = os.getenv("GEMINI_API_KEY")
 
 app = FastAPI()
 
@@ -65,4 +71,23 @@ def delete_prompt(prompt_id : int):
             return{"message" : f"Prompt with ID '{prompt['id']}' and text '{prompt['text']}' has been removed"}
     return{"error" : f"Prompt with an ID of '{prompt_id}' could not be found"}
 
-    
+@app.post("/prompts/{prompt_id}/run")
+def run_prompt(prompt_id: int):
+    prompts = load_prompts()
+    for prompt in prompts:
+        if prompt['id'] == prompt_id:
+            prompt_text = prompt['text']
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={API_KEY}"
+            headers = {'Content-Type': 'application/json'}
+            data = {"contents": [{"parts":[{"text": prompt_text}]}]}
+            try:
+                response = requests.post(url, headers= headers, json=data)
+                response.raise_for_status()
+                full_response = response.json()
+                AI_response = full_response['candidates'][0]['content']['parts'][0]['text']
+                return{"ai_response" : AI_response}
+            except requests.exceptions.RequestException as e:
+                return{"error" : str(e)}
+            except (KeyError, IndexError): 
+                return{"error" : f"\n[!] Error: The AI returned an unexpected format. It may have been blocked by safety filters. Raw response for debugging:, {full_response}, \n"}
+    return{"error" : f"Prompt with an ID of '{prompt_id}' could not be found"}
