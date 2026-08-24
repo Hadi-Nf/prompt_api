@@ -2,3 +2,4 @@ venv/
 prompts.json
 __pycache__/
 *.pyc
+.env
